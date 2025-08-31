@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<title>FabKit Web Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent: #8fb6ab;
+    --accent-dark: #6c9c90;
+    --card-bg: #ffffff;
+    --text: #333;
+  }
+  body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(135deg,#8fb6ab,#eaf4f1);
+    color: var(--text);
+  }
+  .container { max-width:1100px; margin:20px auto; padding:0 15px; display:flex; flex-direction:column; gap:25px;}
+  .tabs { display:flex; gap:10px; justify-content:center; margin-bottom:20px;}
+  .tabs button { background:var(--accent); color:white; border:none; padding:10px 20px; border-radius:10px; font-weight:600; cursor:pointer; transition:0.3s;}
+  .tabs button.active, .tabs button:hover { background: var(--accent-dark);}
+  .controls { display:flex; flex-wrap:wrap; gap:20px;}
+  .card { flex:1; min-width:240px; background: var(--card-bg); border-radius:16px; padding:20px; box-shadow:6px 6px 12px #c0d9d4,-6px -6px 12px #ffffff; text-align:center; transition:0.3s;}
+  .card.graph { margin-top:15px; padding:15px;}
+  h2 { font-size:16px; margin-bottom:12px; color:#444;}
+  input[type="number"], input[type="text"] { padding:8px; border-radius:10px; border:1px solid #ccc; text-align:center; width:100px; font-size:14px;}
+  button { background: var(--accent); color:white; border:none; padding:10px 20px; border-radius:10px; font-weight:600; cursor:pointer; transition:0.3s; margin-top:10px;}
+  button:hover { background: var(--accent-dark);}
+  canvas { background:#fafafa; border-radius:12px; padding:10px; box-shadow: inset 2px 2px 6px rgba(0,0,0,0.05);}
+  #speed_slider { -webkit-appearance:none; width:100%; height:12px; border-radius:10px; background:#e0f0ec; box-shadow: inset 3px 3px 6px #c0d9d4, inset -3px -3px 6px #ffffff; outline:none; margin:15px 0;}
+  #speed_slider::-webkit-slider-thumb { -webkit-appearance:none; width:28px; height:28px; border-radius:50%; background:#8fb6ab; box-shadow:2px 2px 5px rgba(0,0,0,0.2); cursor:pointer; transition:0.3s;}
+  #speed_slider::-webkit-slider-thumb:hover { background:#6c9c90;}
+  #speed_slider::-moz-range-thumb { width:28px; height:28px; border-radius:50%; background:#8fb6ab; box-shadow:2px 2px 5px rgba(0,0,0,0.2); cursor:pointer; transition:0.3s;}
+  .speed-display { font-size:18px; font-weight:600; color:#333; margin-top:5px; text-align:center; background:#f0f5f3; border-radius:12px; padding:5px 0; box-shadow: 3px 3px 6px #c0d9d4,-3px -3px 6px #ffffff;}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+</head>
+<body>
+<div class="container">
+  <div class="tabs">
+    <button id="tab_mech" class="active" onclick="switchTab('mech')">Mecanică</button>
+    <button id="tab_thermo" onclick="switchTab('thermo')">Termodinamică</button>
+  </div>
+
+  <!-- MECANICĂ -->
+  <div id="section_mech">
+    <div class="controls">
+      <div class="card">
+        <h2>Ultima valoare</h2>
+        <input type="text" id="lastValue_mech" readonly value="0">
+      </div>
+      <div class="card">
+        <h2>Frecvență (Hz)</h2>
+        <input type="number" id="freq_mech" value="1" min="1" max="100"><br><br>
+        <button onclick="sendFreq()">Setează</button>
+      </div>
+      <div class="card">
+        <h2>Viteză Motor (0-180)</h2>
+        <input type="range" id="speed_slider" min="0" max="180" value="90" oninput="updateSpeed(this.value)">
+        <div id="speed_value" class="speed-display">90</div>
+        <button onclick="sendSpeed()">Trimite Viteză</button>
+      </div>
+      <div class="card">
+        <h2>Start / Stop</h2>
+        <button onclick="toggleStartStop()">▶Start / ⏸ Stop</button>
+      </div>
+    </div>
+
+    <div class="card graph">
+      <h2>Grafic FabMotor</h2>
+      <canvas id="chart_fabmotor"></canvas>
+    </div>
+    <div class="card graph">
+      <h2>Grafic FabMove</h2>
+      <canvas id="chart_fabmove"></canvas>
+    </div>
+  </div>
+
+  <!-- TERMODINAMICĂ -->
+  <div id="section_thermo" style="display:none;">
+    <div class="controls">
+      <div class="card">
+        <h2>Ultima valoare</h2>
+        <input type="text" id="lastValue_thermo" readonly value="0">
+      </div>
+      <div class="card">
+        <h2>Frecvență (Hz)</h2>
+        <input type="number" id="freq_thermo" value="1" min="1" max="100"><br><br>
+        <button onclick="sendFreqThermo()">Setează</button>
+      </div>
+    </div>
+
+    <div class="card graph">
+      <h2>Grafic FabTemp</h2>
+      <canvas id="chart_fabtemp"></canvas>
+    </div>
+    <div class="card graph">
+      <h2>Grafic FabPressure</h2>
+      <canvas id="chart_fabpressure"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Tab switch
+  function switchTab(tab){
+    document.getElementById("section_mech").style.display = (tab==='mech') ? 'block':'none';
+    document.getElementById("section_thermo").style.display = (tab==='thermo') ? 'block':'none';
+    document.getElementById("tab_mech").classList.toggle("active", tab==='mech');
+    document.getElementById("tab_thermo").classList.toggle("active", tab==='thermo');
+
+    if(tab === 'thermo') {
+      chart_fabtemp.resize();
+      chart_fabpressure.resize();
+    }
+  }
+
+  // Chart.js Mecanică
+  let chart_fabmotor = new Chart(document.getElementById("chart_fabmotor"), {
+    type:'line',
+    data:{ labels:[], datasets:[{label:"FabMotor", data:[], borderColor:"#8fb6ab", borderWidth:2, fill:false}] },
+    options:{ responsive:true, plugins:{legend:{display:true,position:'bottom'}}, scales:{x:{display:false}} }
+  });
+  let chart_fabmove = new Chart(document.getElementById("chart_fabmove"), {
+    type:'line',
+    data:{ labels:[], datasets:[{label:"FabMove", data:[], borderColor:"#8fb6ab", borderWidth:2, fill:false}] },
+    options:{ responsive:true, plugins:{legend:{display:true,position:'bottom'}}, scales:{x:{display:false}} }
+  });
+
+  // Chart.js Termodinamică
+  let chart_fabtemp = new Chart(document.getElementById("chart_fabtemp"), {
+    type:'line',
+    data:{ labels:[], datasets:[{label:"FabTemp", data:[], borderColor:"#8fb6ab", borderWidth:2, fill:false}] },
+    options:{ responsive:true, plugins:{legend:{display:true,position:'bottom'}}, scales:{x:{display:false}} }
+  });
+  let chart_fabpressure = new Chart(document.getElementById("chart_fabpressure"), {
+    type:'line',
+    data:{ labels:[], datasets:[{label:"FabPressure", data:[], borderColor:"#8fb6ab", borderWidth:2, fill:false}] },
+    options:{ responsive:true, plugins:{legend:{display:true,position:'bottom'}}, scales:{x:{display:false}} }
+  });
+
+  let counter = {fabmotor:0,fabmove:0,fabtemp:0,fabpressure:0};
+  let currentSpeed = 90;
+  let runningMech = true;
+
+  // MQTT WebSocket
+  const client = mqtt.connect('ws://test.mosquitto.org:8080/mqtt');
+
+  client.on('connect', ()=>{
+    console.log('MQTT conectat!');
+    client.subscribe('FabKit/FabMotor/SN1/#');
+    client.subscribe('FabKit/FabMove/SN1/#');
+    client.subscribe('FabKit/FabTemp/SN1/#');
+    client.subscribe('FabKit/FabPressure/SN1/#');
+  });
+
+  client.on('message', (topic, message)=>{
+    const payload = message.toString();
+    if(topic.endsWith('FabMotor')) {
+      document.getElementById("lastValue_mech").value = payload;
+      addData(chart_fabmotor, 'fabmotor', parseFloat(payload));
+    }
+    if(topic.endsWith('FabMove')) addData(chart_fabmove,'fabmove',parseFloat(payload));
+    if(topic.endsWith('FabTemp')) { 
+      document.getElementById("lastValue_thermo").value = payload; 
+      addData(chart_fabtemp,'fabtemp',parseFloat(payload)); 
+    }
+    if(topic.endsWith('FabPressure')) addData(chart_fabpressure,'fabpressure',parseFloat(payload));
+  });
+
+  function addData(chart,key,val){
+    if(isNaN(val)) return;
+    if(chart.data.labels.length>=50) chart.data.labels.shift();
+    if(chart.data.datasets[0].data.length>=50) chart.data.datasets[0].data.shift();
+    chart.data.labels.push(counter[key]++);
+    chart.data.datasets[0].data.push(val);
+    chart.update();
+  }
+
+  function updateSpeed(val){ currentSpeed=val; document.getElementById("speed_value").innerText=val; }
+  function sendSpeed(){ client.publish('FabKit/FabMotor/SN1/Vmax', currentSpeed.toString()); console.log("Trimis viteză:", currentSpeed);}
+  function sendFreq(){ const val=document.getElementById("freq_mech").value; client.publish('FabKit/Commands', `FREQ:${val}`); console.log("Trimis frecvență:",val);}
+  function sendFreqThermo(){ const val=document.getElementById("freq_thermo").value; client.publish('FabKit/Commands', `FREQ:${val}`); console.log("Trimis frecvență Thermo:",val);}
+  function toggleStartStop(){ runningMech=!runningMech; client.publish('FabKit/FabMotor/SN1/Start', runningMech? '1':'0'); console.log("Start/Stop Mecanică"); }
+</script>
+</body>
+</html>
