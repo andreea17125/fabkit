@@ -2,50 +2,186 @@
 <html lang="ro">
 <head>
 <meta charset="UTF-8">
-<title>FabKit Web Dashboard</title>
+<title>FabKit Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --accent: #8fb6ab;
-    --accent-dark: #6c9c90;
-    --card-bg: #ffffff;
-    --text: #333;
-  }
-  body {
-    margin: 0;
-    font-family: 'Inter', sans-serif;
-    background: linear-gradient(135deg,#8fb6ab,#eaf4f1);
-    color: var(--text);
-  }
-  .container { max-width:1100px; margin:20px auto; padding:0 15px; display:flex; flex-direction:column; gap:25px;}
-  .tabs { display:flex; gap:10px; justify-content:center; margin-bottom:20px;}
-  .tabs button { background:var(--accent); color:white; border:none; padding:10px 20px; border-radius:10px; font-weight:600; cursor:pointer; transition:0.3s;}
-  .tabs button.active, .tabs button:hover { background: var(--accent-dark);}
-  .controls { display:flex; flex-wrap:wrap; gap:20px;}
-  .card { flex:1; min-width:240px; background: var(--card-bg); border-radius:16px; padding:20px; box-shadow:6px 6px 12px #c0d9d4,-6px -6px 12px #ffffff; text-align:center; transition:0.3s;}
-  .card.graph { margin-top:15px; padding:15px;}
-  h2 { font-size:16px; margin-bottom:12px; color:#444;}
-  input[type="number"], input[type="text"] { padding:8px; border-radius:10px; border:1px solid #ccc; text-align:center; width:100px; font-size:14px;}
-  button { background: var(--accent); color:white; border:none; padding:10px 20px; border-radius:10px; font-weight:600; cursor:pointer; transition:0.3s; margin-top:10px;}
-  button:hover { background: var(--accent-dark);}
-  canvas { background:#fafafa; border-radius:12px; padding:10px; box-shadow: inset 2px 2px 6px rgba(0,0,0,0.05);}
-  #speed_slider { -webkit-appearance:none; width:100%; height:12px; border-radius:10px; background:#e0f0ec; box-shadow: inset 3px 3px 6px #c0d9d4, inset -3px -3px 6px #ffffff; outline:none; margin:15px 0;}
-  #speed_slider::-webkit-slider-thumb { -webkit-appearance:none; width:28px; height:28px; border-radius:50%; background:#8fb6ab; box-shadow:2px 2px 5px rgba(0,0,0,0.2); cursor:pointer; transition:0.3s;}
-  #speed_slider::-webkit-slider-thumb:hover { background:#6c9c90;}
-  #speed_slider::-moz-range-thumb { width:28px; height:28px; border-radius:50%; background:#8fb6ab; box-shadow:2px 2px 5px rgba(0,0,0,0.2); cursor:pointer; transition:0.3s;}
-  .speed-display { font-size:18px; font-weight:600; color:#333; margin-top:5px; text-align:center; background:#f0f5f3; border-radius:12px; padding:5px 0; box-shadow: 3px 3px 6px #c0d9d4,-3px -3px 6px #ffffff;}
+:root {
+  --accent: #8fb6ab;
+  --accent-dark: #6c9c90;
+  --card-bg: #ffffff;
+  --text: #333;
+  --dropdown-bg: #f0f5f3;
+  --dropdown-hover: #d1e2de;
+}
+body { margin:0; font-family:'Inter',sans-serif; background: linear-gradient(135deg,#8fb6ab,#eaf4f1); color:var(--text);}
+.container { max-width:1100px; margin:20px auto; padding:0 15px; display:flex; flex-direction:column; gap:25px;}
+.tabs { display:flex; gap:10px; justify-content:center; margin-bottom:20px;}
+.tabs button { background:var(--accent); color:white; border:none; padding:10px 20px; border-radius:10px; font-weight:600; cursor:pointer; transition:0.3s;}
+.tabs button.active, .tabs button:hover { background: var(--accent-dark);}
+.controls { display:flex; flex-wrap:wrap; gap:20px;}
+.card { flex:1; min-width:240px; background: var(--card-bg); border-radius:16px; padding:20px; box-shadow:6px 6px 12px #c0d9d4,-6px -6px 12px #ffffff; text-align:center; transition:0.3s;}
+.card.graph { margin-top:15px; padding:15px;}
+h2 { font-size:16px; margin-bottom:12px; color:#444;}
+input[type="number"], input[type="text"] { padding:8px; border-radius:10px; border:1px solid #ccc; text-align:center; width:100px; font-size:14px;}
+button { background: var(--accent); color:white; border:none; padding:10px 20px; border-radius:10px; font-weight:600; cursor:pointer; transition:0.3s; margin-top:10px;}
+button:hover { background: var(--accent-dark);}
+canvas { background:#fafafa; border-radius:12px; padding:10px; box-shadow: inset 2px 2px 6px rgba(0,0,0,0.05);}
+
+/* Slider */
+#speed_slider { -webkit-appearance:none; width:100%; height:12px; border-radius:10px; background:#e0f0ec; box-shadow: inset 3px 3px 6px #c0d9d4, inset -3px -3px 6px #ffffff; outline:none; margin:15px 0;}
+#speed_slider::-webkit-slider-thumb { -webkit-appearance:none; width:28px; height:28px; border-radius:50%; background:#8fb6ab; box-shadow:2px 2px 5px rgba(0,0,0,0.2); cursor:pointer; transition:0.3s;}
+#speed_slider::-webkit-slider-thumb:hover { background:#6c9c90;}
+#speed_slider::-moz-range-thumb { width:28px; height:28px; border-radius:50%; background:#8fb6ab; box-shadow:2px 2px 5px rgba(0,0,0,0.2); cursor:pointer; transition:0.3s;}
+.speed-display { font-size:18px; font-weight:600; color:#333; margin-top:5px; text-align:center; background:#f0f5f3; border-radius:12px; padding:5px 0; box-shadow: 3px 3px 6px #c0d9d4,-3px -3px 6px #ffffff;}
+
+/* Dropdown & upload */
+#fabmotor_param_select, #csv_param_select {
+  padding: 10px 15px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  background: var(--dropdown-bg);
+  color: #333;
+  cursor: pointer;
+  transition: 0.3s;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  margin-top:10px;
+}
+#fabmotor_param_select:hover, #csv_param_select:hover { background: var(--dropdown-hover); }
+
+.upload-btn {
+  display: inline-block;
+  background: var(--accent);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+  margin-top: 10px;
+}
+.upload-btn:hover { background: var(--accent-dark); }
+#csvFileName { margin-top: 8px; font-size: 14px; color: #555; font-style: italic; }
+
+/* Overlay Teorie */
+#section_theory_overlay {
+  display:none;
+  position:fixed;
+  top:0; left:0; width:100%; height:100%;
+  background: rgba(0,0,0,0.5);
+  z-index:1000;
+  overflow:auto;
+  
+}
+#section_theory_content {
+  max-width:800px;
+  margin:50px auto;
+  background:#fff;
+  padding:20px;
+  border-radius:12px;
+  box-shadow: 4px 4px 12px rgba(0,0,0,0.2);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+#section_theory_content h2,h3,p { color:#222; }
+#section_theory_content .close-btn {
+  display:block;
+  margin:0 0 15px auto;
+  padding:5px 15px;
+  background: var(--accent);
+  color:white;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+#section_theory_content .close-btn:hover { background: var(--accent-dark); }
+
+.graph-container {
+  position: relative;
+  width: 100%;
+  overflow-x: auto;
+}
+.graph-container canvas {
+  min-width: 800px;
+}
+ 
+ /* Stiluri pentru conținutul DOCX */
+ #section_theory_content img {
+   max-width: 100%;
+   height: auto;
+   border-radius: 8px;
+   margin: 10px 0;
+   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+ }
+ 
+ #section_theory_content table {
+   border-collapse: collapse;
+   width: 100%;
+   margin: 15px 0;
+   background: white;
+   border-radius: 8px;
+   overflow: hidden;
+   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+ }
+ 
+ #section_theory_content table th,
+ #section_theory_content table td {
+   border: 1px solid #ddd;
+   padding: 12px;
+   text-align: left;
+ }
+ 
+ #section_theory_content table th {
+   background: #8fb6ab;
+   color: white;
+   font-weight: 600;
+ }
+ 
+ #section_theory_content h1, #section_theory_content h2, #section_theory_content h3 {
+   color: #333;
+   margin: 20px 0 10px 0;
+   border-bottom: 2px solid #8fb6ab;
+   padding-bottom: 5px;
+ }
+ 
+ #section_theory_content p {
+   margin: 10px 0;
+   line-height: 1.6;
+ }
+ 
+ #section_theory_content ul, #section_theory_content ol {
+   margin: 10px 0;
+   padding-left: 20px;
+ }
+ 
+ #section_theory_content li {
+   margin: 5px 0;
+ }
 </style>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.1.1/dist/chartjs-plugin-zoom.min.js"></script>
 <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
 </head>
 <body>
+
+<!-- Buton Teorie -->
+<div style="text-align:center; margin:15px 0;">
+  <button onclick="showTheory('mech')">Teorie Mecanică</button>
+  <button onclick="showTheory('thermo')">Teorie Termodinamică</button>
+</div>
+
+<!-- Dashboard principal -->
 <div class="container">
   <div class="tabs">
     <button id="tab_mech" class="active" onclick="switchTab('mech')">Mecanică</button>
     <button id="tab_thermo" onclick="switchTab('thermo')">Termodinamică</button>
   </div>
 
-  <!-- MECANICĂ -->
+
   <div id="section_mech">
     <div class="controls">
       <div class="card">
@@ -58,24 +194,48 @@
         <button onclick="sendFreq()">Setează</button>
       </div>
       <div class="card">
-        <h2>Viteză Motor (0-180)</h2>
+        <h2>Viteză Motor</h2>
         <input type="range" id="speed_slider" min="0" max="180" value="90" oninput="updateSpeed(this.value)">
         <div id="speed_value" class="speed-display">90</div>
         <button onclick="sendSpeed()">Trimite Viteză</button>
       </div>
       <div class="card">
         <h2>Start / Stop</h2>
-        <button onclick="toggleStartStop()">▶Start / ⏸ Stop</button>
+        <button onclick="toggleStartStop()">Start/Stop</button>
       </div>
     </div>
 
     <div class="card graph">
-      <h2>Grafic FabMotor</h2>
+      <h2>Grafic FabMotor (SN1)</h2>
+      <select id="fabmotor_param_select">
+        <option value="Accel">Accel</option>
+        <option value="Brake">Brake</option>
+        <option value="Decel">Decel</option>
+        <option value="DecelPos">DecelPos</option>
+        <option value="KickMs">KickMs</option>
+        <option value="KickPWM">KickPWM</option>
+        <option value="PwmFreq">PwmFreq</option>
+        <option value="Vmax">Vmax</option>
+      </select>
       <canvas id="chart_fabmotor"></canvas>
+      <button onclick="exportCSV('mech')">Salvează CSV</button>
     </div>
+
     <div class="card graph">
-      <h2>Grafic FabMove</h2>
+      <h2>Grafic FabMove (SN1)</h2>
       <canvas id="chart_fabmove"></canvas>
+    </div>
+
+    <div class="card graph">
+      <h2>Grafic din CSV</h2>
+      <input type="file" id="csvUpload" accept=".csv" hidden>
+      <label for="csvUpload" class="upload-btn">Încarcă CSV</label>
+      <div id="csvFileName">Niciun fișier selectat</div>
+      <select id="csv_param_select"><option value="">Alege parametru</option></select>
+      <div class="graph-container">
+        <canvas id="chart_csv"></canvas>
+      </div>
+      <button onclick="exportCSVCSV()">Salvează CSV</button>
     </div>
   </div>
 
@@ -94,97 +254,535 @@
     </div>
 
     <div class="card graph">
-      <h2>Grafic FabTemp</h2>
-      <canvas id="chart_fabtemp"></canvas>
+      <h2>Grafic FabPress (SN1)</h2>
+      <canvas id="chart_thermo"></canvas>
+      <button onclick="exportCSV('thermo')">Salvează CSV</button>
     </div>
+
     <div class="card graph">
-      <h2>Grafic FabPressure</h2>
-      <canvas id="chart_fabpressure"></canvas>
+      <h2>Grafic FabTemp </h2>
+      <canvas id="chart_fabtemp"></canvas>
     </div>
   </div>
 </div>
 
+
+<div id="section_theory_overlay">
+  <div id="section_theory_content">
+    <button class="close-btn" onclick="closeTheory()">Închide Teoria</button>
+    <h2>Teorie Mecanică și Termodinamică</h2>
+     
+           
+     
+           <div id="theory_content">
+       
+      </div>
+  </div>
+</div>
+
 <script>
-  // Tab switch
-  function switchTab(tab){
-    document.getElementById("section_mech").style.display = (tab==='mech') ? 'block':'none';
-    document.getElementById("section_thermo").style.display = (tab==='thermo') ? 'block':'none';
+// --- Tabs ---
+function switchTab(tab){
+    document.getElementById("section_mech").style.display = (tab==='mech')?'block':'none';
+    document.getElementById("section_thermo").style.display = (tab==='thermo')?'block':'none';
     document.getElementById("tab_mech").classList.toggle("active", tab==='mech');
     document.getElementById("tab_thermo").classList.toggle("active", tab==='thermo');
+}
 
-    if(tab === 'thermo') {
-      chart_fabtemp.resize();
-      chart_fabpressure.resize();
+// --- Teorie Overlay ---
+function showTheory(section){
+  document.getElementById('section_theory_overlay').style.display='block';
+    
+    // Golește conținutul și afișează doar input-ul pentru fișier
+    const theoryContent = document.getElementById('theory_content');
+    
+    if(section==='mech'){
+             theoryContent.innerHTML = `
+         <h3>Teorie Mecanică</h3>
+         <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+           <h4>Încarcă document DOCX pentru Teorie Mecanică:</h4>
+           <input type="file" id="theoryDocxUploadMech" accept=".docx" style="margin: 10px 0;">
+         </div>
+         <div id="mech_content"></div>
+       `;
+  
+      setTimeout(() => {
+        const input = document.getElementById('theoryDocxUploadMech');
+        if(input) {
+          input.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            loadDocxFile(file, 'Mecanică', 'mech_content');
+          });
+        }
+      }, 100);
+      
+    } else if(section==='thermo'){
+             theoryContent.innerHTML = `
+         
+         <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 10px;">
+           <h4>Încarcă document DOCX pentru Teorie Termodinamică:</h4>
+           <input type="file" id="theoryDocxUploadThermo" accept=".docx" style="margin: 10px 0;">
+         </div>
+         <div id="thermo_content"></div>
+       `;
+      
+      // Adaugă event listener pentru input-ul termodinamic
+      setTimeout(() => {
+        const input = document.getElementById('theoryDocxUploadThermo');
+        if(input) {
+          input.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            loadDocxFile(file, 'Termodinamică', 'thermo_content');
+          });
+        }
+      }, 100);
     }
+}
+function closeTheory(){ document.getElementById('section_theory_overlay').style.display='none'; }
+  
+     // Funcție pentru încărcarea teoriei implicite complete
+   function loadDefaultTheory(){
+       const theoryContent = document.getElementById('theory_content');
+       theoryContent.innerHTML = `
+           <h3 id="theory_mech">Mecanică</h3>
+           <p><strong>Definiție:</strong> Mecanică este ramura fizicii care studiază mișcarea corpurilor și forțele care le provoacă.</p>
+           <p><strong>Legea a doua a lui Newton:</strong> F = m * a</p>
+           <p><strong>Legea conservării energiei:</strong> Energia totală într-un sistem izolat rămâne constantă.</p>
+           <p><strong>Energia cinetică:</strong> E = ½mv²</p>
+           <p><strong>Energia potențială:</strong> E = mgh</p>
+           
+           <h3 id="theory_thermo">Termodinamică</h3>
+           <p><strong>Definiție:</strong> Termodinamica studiază relațiile dintre căldură, lucru mecanic și energie.</p>
+           <p><strong>Prima lege a termodinamicii:</strong> ΔU = Q - W</p>
+           <p><strong>Entropie:</strong> Măsoară gradul de dezordine al unui sistem; ΔS ≥ 0</p>
+           <p><strong>Eficiența termodinamică:</strong> η = W/Q₁</p>
+       `;
+       console.log("Teoria implicită completă încărcată");
+   }
+   
+   // Funcție pentru încărcarea teoriei mecanice implicite
+   function loadMechTheory(){
+       const mechContent = document.getElementById('mech_content');
+       if(mechContent) {
+           mechContent.innerHTML = `
+               <div style="margin-top: 20px;">
+                   <h4>Teorie Mecanică Implicită</h4>
+                   <p><strong>Definiție:</strong> Mecanică este ramura fizicii care studiază mișcarea corpurilor și forțele care le provoacă.</p>
+                   <p><strong>Legea a doua a lui Newton:</strong> F = m * a</p>
+                   <p><strong>Legea conservării energiei:</strong> Energia totală într-un sistem izolat rămâne constantă.</p>
+                   <p><strong>Energia cinetică:</strong> E = ½mv²</p>
+                   <p><strong>Energia potențială:</strong> E = mgh</p>
+                   <p><strong>Momentul unghiular:</strong> L = Iω</p>
+                   <p><strong>Forța centripetă:</strong> F = mv²/r</p>
+               </div>
+           `;
+       }
+       console.log("Teoria mecanică implicită încărcată");
+   }
+   
+  
+   function loadThermoTheory(){
+       const thermoContent = document.getElementById('thermo_content');
+       if(thermoContent) {
+           thermoContent.innerHTML = `
+               <div style="margin-top: 20px;">
+                   <h4>Teorie Termodinamică Implicită</h4>
+                   <p><strong>Definiție:</strong> Termodinamica studiază relațiile dintre căldură, lucru mecanic și energie.</p>
+                   <p><strong>Prima lege a termodinamicii:</strong> ΔU = Q - W</p>
+                   <p><strong>A doua lege a termodinamicii:</strong> ΔS ≥ 0</p>
+                   <p><strong>Entropie:</strong> Măsoară gradul de dezordine al unui sistem; ΔS ≥ 0</p>
+                   <p><strong>Eficiența termodinamică:</strong> η = W/Q₁</p>
+                   <p><strong>Legea lui Boyle:</strong> PV = constant (T constant)</p>
+                   <p><strong>Legea lui Charles:</strong> V/T = constant (P constant)</p>
+               </div>
+           `;
+       }
+       console.log("Teoria termodinamică implicită încărcată");
+   }
+
+
+// --- Grafice ---
+const fabmotorParams = ["Accel","Brake","Decel","DecelPos","KickMs","KickPWM","PwmFreq","Vmax"];
+let fabmotorValues = {};
+fabmotorParams.forEach(p => fabmotorValues[p]=0);
+let startTime = null;
+
+// FabMotor
+let chart_fabmotor = new Chart(document.getElementById("chart_fabmotor"), {
+    type:'line',
+    data:{ labels:[], datasets:[{label:"Accel", data:[], borderColor:"#8fb6ab", borderWidth:2, fill:false}] },
+    options:{ responsive:true, animation:false, scales:{ x:{display:true,title:{display:true,text:'Timp (ms)'}}, y:{display:true,title:{display:true,text:'Valoare'}} } }
+});
+const fabmotorSelect = document.getElementById('fabmotor_param_select');
+fabmotorSelect.addEventListener('change', ()=>{ chart_fabmotor.data.datasets[0].label = fabmotorSelect.value; chart_fabmotor.data.labels = []; chart_fabmotor.data.datasets[0].data = []; chart_fabmotor.update(); });
+function addFabmotorData(param,val){ if(startTime===null) return; if(chart_fabmotor.data.labels.length>=50){ chart_fabmotor.data.labels.shift(); chart_fabmotor.data.datasets[0].data.shift(); } let ms = Date.now() - startTime; chart_fabmotor.data.labels.push(ms); chart_fabmotor.data.datasets[0].data.push(val); chart_fabmotor.update(); }
+
+// FabMove
+let chart_fabmove = new Chart(document.getElementById("chart_fabmove"), {
+    type:'line',
+    data:{ labels:[], datasets:[
+        {label:"X", data:[], borderColor:"#ff3333", fill:false, borderWidth:2},
+        {label:"Y", data:[], borderColor:"#33cc33", fill:false, borderWidth:2},
+        {label:"Z", data:[], borderColor:"#3366cc", fill:false, borderWidth:2}
+    ]},
+    options:{ responsive:true, animation:false, scales:{ x:{display:true,title:{display:true,text:'Timp (ms)'}}, y:{display:true,title:{display:true,text:'Valoare'}} } }
+});
+function addFabMoveData(x,y,z){ let ms = Date.now() - startTime; chart_fabmove.data.labels.push(ms); chart_fabmove.data.datasets[0].data.push(x); chart_fabmove.data.datasets[1].data.push(y); chart_fabmove.data.datasets[2].data.push(z); if(chart_fabmove.data.labels.length>50){ chart_fabmove.data.labels.shift(); chart_fabmove.data.datasets.forEach(d=>d.data.shift()); } chart_fabmove.update(); }
+
+// FabPress
+let fabpressValues = { P: 0 };
+let lastFabpressUpdate = 0;
+const minUpdateInterval = 50;
+let chart_fabpress = new Chart(document.getElementById("chart_thermo"), {
+    type:'line',
+    data:{ labels:[], datasets:[{label:"Presiune", data:[], borderColor:"#ff8f80", borderWidth:2, fill:false}] },
+    options:{ responsive:true, animation:false, scales:{ x:{display:true,title:{display:true,text:'Timp (ms)'}}, y:{display:true,title:{display:true,text:'Valoare'}} } }
+});
+function addFabpressData(t,val){ const now = Date.now(); if(now - lastFabpressUpdate < minUpdateInterval) return; lastFabpressUpdate = now; if(chart_fabpress.data.labels.length>=50){ chart_fabpress.data.labels.shift(); chart_fabpress.data.datasets[0].data.shift(); } chart_fabpress.data.labels.push(t); chart_fabpress.data.datasets[0].data.push(val); chart_fabpress.update(); }
+
+// FabTemp
+let chart_fabtemp = new Chart(document.getElementById("chart_fabtemp"), {
+    type:'line',
+    data:{ labels:[], datasets:[{label:"Temperatura", data:[], borderColor:"#ffcc33", borderWidth:2, fill:false}] },
+    options:{ responsive:true, animation:false, scales:{ x:{display:true,title:{display:true,text:'Timp (ms)'}}, y:{display:true,title:{display:true,text:'Valoare'}} } }
+});
+let lastFabTempUpdate = 0;
+const minFabTempInterval = 50;
+function addFabTempData(t,val){ const now = Date.now(); if(now - lastFabTempUpdate < minFabTempInterval) return; lastFabTempUpdate = now; if(chart_fabtemp.data.labels.length>=50){ chart_fabtemp.data.labels.shift(); chart_fabtemp.data.datasets[0].data.shift(); } chart_fabtemp.data.labels.push(t); chart_fabtemp.data.datasets[0].data.push(val); chart_fabtemp.update(); }
+
+// --- MQTT Local ---
+let client;
+let currentSpeed = 90;
+let runningMech = false;
+
+function connectMQTT(){
+    console.log("Connecting to MQTT...");
+    client = mqtt.connect('ws://192.168.1.10:8080/mqtt');
+
+    client.on('connect', ()=>{ 
+        console.log("MQTT connected to 192.168.1.10:8080");
+        client.subscribe('FabKit/#'); 
+    });
+
+    client.on('message',(topic,message)=>{
+        const payload = message.toString().trim();
+
+        if(topic.startsWith('FabKit/FabMotor')){
+            const param = topic.split('/').pop();
+            const val = parseFloat(payload);
+            if(fabmotorParams.includes(param)){
+                fabmotorValues[param] = val;
+                document.getElementById("lastValue_mech").value = val;
+                if(param === fabmotorSelect.value) addFabmotorData(param,val);
+            }
+        }
+
+        if(topic.includes('FabKit/FabPress/Data')){
+            const parts = payload.split(/\s+/);
+            if(parts.length >= 3 && parts[0] === 'P'){
+                const t = Number(parts[1]);
+                const val = Number(parts[2]);
+                if(!isNaN(t) && !isNaN(val)){
+                    fabpressValues['P'] = val;
+                    document.getElementById("lastValue_thermo").value = val;
+                    addFabpressData(t,val);
+                }
+            }
+        }
+
+        if(topic.startsWith('FabKit/FabMove')){
+            const parts = payload.split(',');
+            if(parts.length>=3){
+                const x = parseFloat(parts[0]);
+                const y = parseFloat(parts[1]);
+                const z = parseFloat(parts[2]);
+                addFabMoveData(x,y,z);
+            }
+        }
+
+        if(topic.startsWith('FabKit/FabTemp')){
+            const parts = payload.split(',');
+            if(parts.length>=2){
+                const t = Number(parts[0]);
+                const val = Number(parts[1]);
+                addFabTempData(t,val);
+            }
+        }
+    });
+
+    client.on('error', (err)=>{ console.error("MQTT Error:", err); client.end(); });
+    client.on('close', ()=>{ console.log("MQTT disconnected, reconnecting in 3s..."); setTimeout(connectMQTT,3000); });
+}
+connectMQTT();
+
+// --- Controls ---
+// Actualizează valoarea sliderului pe UI
+function updateSpeed(val){
+    currentSpeed = val;
+    document.getElementById("speed_value").innerText = val;
+}
+
+// Trimite viteza la topicul FabKit/FabMotor/Vmax
+function sendSpeed(){
+    client.publish('FabKit/FabMotor/Vmax', currentSpeed.toString());
+    console.log("Trimis la FabKit/FabMotor/Vmax:", currentSpeed);
+}
+
+// Trimite frecvența la FabKit/FabMotor/Freq
+function sendFreq(){
+    const val = document.getElementById("freq_mech").value;
+    client.publish('FabKit/FabMotor/Freq', val.toString());
+    console.log("Trimis la FabKit/FabMotor/Freq:", val);
+}
+
+function sendFreqThermo(){ const val=document.getElementById("freq_thermo").value; client.publish('FabKit/FabPress/Command', `FREQ:${val}`); }
+
+// Start / Stop la FabKit/FabMotor/Start (0 sau 1)
+function toggleStartStop(){
+    runningMech = !runningMech;
+    const val = runningMech ? "1" : "0";
+    client.publish('FabKit/FabMotor/Start', val);
+    console.log("Trimis la FabKit/FabMotor/Start:", val);
+
+    if(runningMech){
+        chart_fabmotor.data.labels = [];
+        chart_fabmotor.data.datasets[0].data = [];
+        startTime = Date.now();
+    } else {
+        startTime = null;
+    }
+}
+
+// --- CSV ---
+let csvRows = [];
+const csvParamSelect = document.getElementById('csv_param_select');
+document.getElementById('csvUpload').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  const fileNameDisplay = document.getElementById('csvFileName');
+  if(!file){ fileNameDisplay.textContent = "Niciun fișier selectat"; return; }
+  fileNameDisplay.textContent = "Fișier: " + file.name;
+
+  const reader = new FileReader();
+  reader.onload = function(event){
+    const text = event.target.result.trim();
+    csvRows = text.split('\n').map(r => r.split(';'));
+    if(csvRows.length < 2) return;
+
+    const headers = csvRows[0].slice(1);
+    csvParamSelect.innerHTML = '';
+    headers.forEach((h,i)=>{
+      const opt = document.createElement('option');
+      opt.value = i+1;
+      opt.textContent = h;
+      csvParamSelect.appendChild(opt);
+    });
+    updateCSVChart(1);
+  };
+  reader.readAsText(file);
+});
+
+csvParamSelect.addEventListener('change', ()=>{ 
+  const colIndex = parseInt(csvParamSelect.value); 
+  if(isNaN(colIndex)) return; 
+  updateCSVChart(colIndex); 
+});
+
+let chart_csv = new Chart(document.getElementById("chart_csv"),{
+    type:'line',
+    data:{ labels:[], datasets:[{label:"Param", data:[], borderColor:"#3366cc", fill:false, borderWidth:2, pointRadius:0}] },
+    options:{ responsive:true, animation:false, maintainAspectRatio:false }
+});
+// --- FILTRE ---
+// Mediană mobilă
+function medianFilter(data, windowSize=5){
+  let result = [];
+  for(let i=0;i<data.length;i++){
+    let start = Math.max(0, i - Math.floor(windowSize/2));
+    let end = Math.min(data.length, i + Math.floor(windowSize/2) + 1);
+    let window = data.slice(start, end).slice(); 
+    window.sort((a,b)=>a-b);
+    let mid = Math.floor(window.length/2);
+    result.push(window.length % 2 ? window[mid] : (window[mid-1]+window[mid])/2);
   }
+  return result;
+}
 
-  // Chart.js Mecanică
-  let chart_fabmotor = new Chart(document.getElementById("chart_fabmotor"), {
-    type:'line',
-    data:{ labels:[], datasets:[{label:"FabMotor", data:[], borderColor:"#8fb6ab", borderWidth:2, fill:false}] },
-    options:{ responsive:true, plugins:{legend:{display:true,position:'bottom'}}, scales:{x:{display:false}} }
-  });
-  let chart_fabmove = new Chart(document.getElementById("chart_fabmove"), {
-    type:'line',
-    data:{ labels:[], datasets:[{label:"FabMove", data:[], borderColor:"#8fb6ab", borderWidth:2, fill:false}] },
-    options:{ responsive:true, plugins:{legend:{display:true,position:'bottom'}}, scales:{x:{display:false}} }
-  });
-
-  // Chart.js Termodinamică
-  let chart_fabtemp = new Chart(document.getElementById("chart_fabtemp"), {
-    type:'line',
-    data:{ labels:[], datasets:[{label:"FabTemp", data:[], borderColor:"#8fb6ab", borderWidth:2, fill:false}] },
-    options:{ responsive:true, plugins:{legend:{display:true,position:'bottom'}}, scales:{x:{display:false}} }
-  });
-  let chart_fabpressure = new Chart(document.getElementById("chart_fabpressure"), {
-    type:'line',
-    data:{ labels:[], datasets:[{label:"FabPressure", data:[], borderColor:"#8fb6ab", borderWidth:2, fill:false}] },
-    options:{ responsive:true, plugins:{legend:{display:true,position:'bottom'}}, scales:{x:{display:false}} }
-  });
-
-  let counter = {fabmotor:0,fabmove:0,fabtemp:0,fabpressure:0};
-  let currentSpeed = 90;
-  let runningMech = true;
-
-  // MQTT WebSocket
-  const client = mqtt.connect('ws://test.mosquitto.org:8080/mqtt');
-
-  client.on('connect', ()=>{
-    console.log('MQTT conectat!');
-    client.subscribe('FabKit/FabMotor/SN1/#');
-    client.subscribe('FabKit/FabMove/SN1/#');
-    client.subscribe('FabKit/FabTemp/SN1/#');
-    client.subscribe('FabKit/FabPressure/SN1/#');
-  });
-
-  client.on('message', (topic, message)=>{
-    const payload = message.toString();
-    if(topic.endsWith('FabMotor')) {
-      document.getElementById("lastValue_mech").value = payload;
-      addData(chart_fabmotor, 'fabmotor', parseFloat(payload));
-    }
-    if(topic.endsWith('FabMove')) addData(chart_fabmove,'fabmove',parseFloat(payload));
-    if(topic.endsWith('FabTemp')) { 
-      document.getElementById("lastValue_thermo").value = payload; 
-      addData(chart_fabtemp,'fabtemp',parseFloat(payload)); 
-    }
-    if(topic.endsWith('FabPressure')) addData(chart_fabpressure,'fabpressure',parseFloat(payload));
-  });
-
-  function addData(chart,key,val){
-    if(isNaN(val)) return;
-    if(chart.data.labels.length>=50) chart.data.labels.shift();
-    if(chart.data.datasets[0].data.length>=50) chart.data.datasets[0].data.shift();
-    chart.data.labels.push(counter[key]++);
-    chart.data.datasets[0].data.push(val);
-    chart.update();
+// Media mobilă simplă
+function movingAverageFilter(data, windowSize=7){
+  let result = [];
+  for(let i=0;i<data.length;i++){
+    let start = Math.max(0, i - windowSize + 1);
+    let window = data.slice(start, i+1);
+    let avg = window.reduce((a,b)=>a+b,0)/window.length;
+    result.push(avg);
   }
+  return result;
+}
 
-  function updateSpeed(val){ currentSpeed=val; document.getElementById("speed_value").innerText=val; }
-  function sendSpeed(){ client.publish('FabKit/FabMotor/SN1/Vmax', currentSpeed.toString()); console.log("Trimis viteză:", currentSpeed);}
-  function sendFreq(){ const val=document.getElementById("freq_mech").value; client.publish('FabKit/Commands', `FREQ:${val}`); console.log("Trimis frecvență:",val);}
-  function sendFreqThermo(){ const val=document.getElementById("freq_thermo").value; client.publish('FabKit/Commands', `FREQ:${val}`); console.log("Trimis frecvență Thermo:",val);}
-  function toggleStartStop(){ runningMech=!runningMech; client.publish('FabKit/FabMotor/SN1/Start', runningMech? '1':'0'); console.log("Start/Stop Mecanică"); }
+// EMA
+function exponentialMovingAverage(data, alpha=0.4){
+  let result = [];
+  data.forEach((v,i)=>{
+    if(i===0) result.push(v);
+    else result.push(alpha*v + (1-alpha)*result[i-1]);
+  });
+  return result;
+}
+
+// Downsampling prin mediere (resampling)
+function downsample(data, factor=3){
+  let result = [];
+  for(let i=0; i<data.length; i+=factor){
+    let chunk = data.slice(i, i+factor);
+    let avg = chunk.reduce((a,b)=>a+b,0)/chunk.length;
+    result.push(avg);
+  }
+  return result;
+}
+
+function updateCSVChart(colIndex){
+  const labels = [], rawValues = [];
+  csvRows.slice(1).forEach(row=>{
+    labels.push(row[0]);
+    rawValues.push(parseFloat(row[colIndex]) || 0);
+  });
+
+  // --- Pipeline filtrare ---
+  const step1 = medianFilter(rawValues, 5);     // scoate spike-uri
+  const step2 = movingAverageFilter(step1, 7);  // netezește curba
+  const step3 = exponentialMovingAverage(step2, 0.4); // face lin curba
+  const smoothValues = downsample(step3, 3);    // reduce punctele → linie curată
+
+  // Ajustăm și etichetele (downsample)
+  const downLabels = labels.filter((_,i)=> i % 3 === 0);
+
+  chart_csv.data.labels = downLabels;
+  chart_csv.data.datasets = [{
+      label: csvRows[0][colIndex],
+      data: smoothValues,
+      borderColor: "#3366cc",
+      fill:false,
+      borderWidth:2,
+      pointRadius:0
+  }];
+
+  chart_csv.options = {
+    responsive:true,
+    animation:false,
+    maintainAspectRatio:false,
+    scales:{
+      x:{ display:true, title:{display:true,text:'Timp'}, ticks:{ autoSkip:true, maxTicksLimit:20 } },
+      y:{ display:true, title:{display:true,text:'Valoare'} }
+    },
+    plugins:{
+      zoom:{ 
+        pan:{ enabled:true, mode:'x', threshold:5 },
+        zoom:{ wheel:{ enabled:true }, pinch:{ enabled:true }, mode:'x' }
+      }
+    }
+  };
+  chart_csv.update();
+}
+
+
+
+function exportCSV(tab){
+    let chart, filename;
+    if(tab==='mech'){ chart = chart_fabmotor; filename='FabMotor_'+fabmotorSelect.value+'.csv'; }
+    else { chart = chart_fabpress; filename='FabPress.csv'; }
+    let csv = 'Timp (ms);Valoare\n';
+    chart.data.labels.forEach((label,i)=>{ csv += label + ';' + chart.data.datasets[0].data[i] + '\n'; });
+    const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+}
+
+function exportCSVCSV(){
+  const colIndex = parseInt(csvParamSelect.value);
+  if(isNaN(colIndex)) return alert("Selectează un parametru!");
+  let csv = csvRows[0][0] + ';' + csvRows[0][colIndex] + '\n';
+  csvRows.slice(1).forEach(row=>{ csv += row[0] + ';' + row[colIndex] + '\n'; });
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'CSV_'+csvRows[0][colIndex]+'.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+ }
+ 
+           // --- Funcționalitate DOCX pentru Teorie ---
+   
+    function loadDocxFile(file, section, contentId) {
+            console.log(`Încărcare document DOCX pentru ${section}:`, file.name);
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const arrayBuffer = event.target.result;
+                
+                
+                mammoth.convertToHtml({arrayBuffer: arrayBuffer})
+                    .then(function(result) {
+                        const html = result.value;
+                        console.log(`HTML extras din DOCX (${section}):`, html.substring(0, 200) + "...");
+                        
+                        
+                        const contentElement = document.getElementById(contentId);
+                        if(contentElement) {
+                            contentElement.innerHTML = `
+                                <div style="margin-top: 20px;">
+                                    <h4>Teorie ${section} din Document</h4>
+                                    <div style="line-height: 1.6; text-align: justify; background: #f9f9f9; padding: 15px; border-radius: 8px; border-left: 4px solid #8fb6ab; max-height: 600px; overflow-y: auto;">
+                                        ${html}
+                                    </div>
+                                </div>
+                            `;
+                            console.log(`Conținut HTML complet afișat în ${contentId}`);
+                        } else {
+                            console.error(`Elementul ${contentId} nu a fost găsit!`);
+                        }
+                        
+                        console.log(`Document DOCX pentru ${section} încărcat cu succes!`);
+                    })
+                    .catch(function(error) {
+                        console.error(`Eroare la extragerea HTML din DOCX pentru ${section}:`, error);
+                        
+                       
+                        mammoth.extractRawText({arrayBuffer: arrayBuffer})
+                            .then(function(result) {
+                                const text = result.value;
+                                console.log(`Text simplu extras din DOCX (${section}):`, text.substring(0, 200) + "...");
+                                
+                                const contentElement = document.getElementById(contentId);
+                                if(contentElement) {
+                                    contentElement.innerHTML = `
+                                        <div style="margin-top: 20px;">
+                                            <h4>Teorie ${section} din Document (Text Simplu)</h4>
+                                            <div style="white-space: pre-wrap; line-height: 1.6; text-align: justify; background: #f9f9f9; padding: 15px; border-radius: 8px; border-left: 4px solid #8fb6ab; max-height: 600px; overflow-y: auto;">
+                                                ${text}
+                                            </div>
+                                        </div>
+                                    `;
+                                    console.log(`Conținut text simplu afișat în ${contentId}`);
+                                }
+                            })
+                            .catch(function(textError) {
+                                console.error(`Eroare la citirea documentului DOCX pentru ${section}:`, textError);
+                                alert(`Eroare la citirea documentului DOCX pentru ${section}. Verifică că fișierul este valid.`);
+                            });
+                    });
+            };
+            
+            reader.onerror = function() {
+                console.error("Eroare la citirea fișierului");
+                alert("Eroare la citirea fișierului. Încearcă din nou.");
+            };
+            
+            reader.readAsArrayBuffer(file);
+}
 </script>
 </body>
 </html>
